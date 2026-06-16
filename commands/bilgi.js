@@ -1,4 +1,4 @@
-const { statusBedrock } = require("minecraft-server-util");
+const { status } = require("minecraft-server-util");
 
 module.exports = {
   name: "bilgi",
@@ -6,14 +6,14 @@ module.exports = {
   async execute(message, client) {
 
     const ip = "mc.skyforgenw.com.tr";
-    const port = 19132;
+    const port = 25565;
 
     try {
 
-      const data = await statusBedrock(ip, port);
+      const data = await status(ip, port);
 
       const embed = {
-        title: "📊 SkyForge Network (Bedrock)",
+        title: "📊 SkyForge Network",
         color: 0x00ff99,
         fields: [
           {
@@ -23,13 +23,18 @@ module.exports = {
           },
           {
             name: "🏓 Ping",
-            value: `${data.roundTripLatency} ms`,
+            value: `${data.latency} ms`,
             inline: true
           },
           {
             name: "🌐 IP",
             value: `${ip}:${port}`,
             inline: false
+          },
+          {
+            name: "📡 Durum",
+            value: "🟢 Online",
+            inline: true
           }
         ]
       };
@@ -38,9 +43,23 @@ module.exports = {
 
     } catch (err) {
 
-      console.log("BEDROCK ERROR:", err);
+      console.log("MC ERROR:", err);
 
-      message.channel.send("⚠️ Sunucu kapalı veya Bedrock query kapalı!");
+      message.channel.send({
+        embeds: [
+          {
+            title: "📊 SkyForge Network",
+            color: 0xff0000,
+            description: "🔴 Sunucuya ulaşılamıyor (kapalı veya bakımda)",
+            fields: [
+              {
+                name: "🌐 IP",
+                value: `${ip}:${port}`
+              }
+            ]
+          }
+        ]
+      });
 
     }
   }
