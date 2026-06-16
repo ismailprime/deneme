@@ -10,13 +10,16 @@ const {
   ChannelType
 } = require("discord.js");
 
+// ================= CONFIG =================
 const TOKEN = process.env.TOKEN;
 
-// 📌 ID’LER
+const OWNER_ID = "1003708560728920165";
+const ADMIN_ROLE_ID = "1506368461964705924";
+
 const LOG_CHANNEL_ID = "1512629605830716257";
 const WELCOME_CHANNEL_ID = "1506386634357211187";
 
-// 📊 CLIENT
+// ================= CLIENT =================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -27,90 +30,61 @@ const client = new Client({
   partials: [Partials.Message, Partials.Channel, Partials.GuildMember]
 });
 
-// 📊 INVITES
-const invites = new Map();
-const userInvites = new Map();
-
 // ================= READY =================
-client.once("ready", async () => {
+client.once("ready", () => {
   console.log(`${client.user.tag} aktif`);
-
-  client.guilds.cache.forEach(async (guild) => {
-    const inv = await guild.invites.fetch().catch(() => {});
-    invites.set(guild.id, inv);
-  });
 });
 
-// ================= WELCOME =================
-client.on("guildMemberAdd", (member) => {
-  const ch = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
-  if (ch) ch.send(`👋 Hoşgeldin <@${member.id}>`);
-});
-
-// ================= INVITE TRACK =================
-client.on("inviteCreate", async (invite) => {
-  const g = invites.get(invite.guild.id) || new Map();
-  g.set(invite.code, invite);
-  invites.set(invite.guild.id, g);
-});
-
+// ================= WELCOME + OWNER =================
 client.on("guildMemberAdd", async (member) => {
+  try {
 
-  const cached = invites.get(member.guild.id);
-  const fresh = await member.guild.invites.fetch().catch(() => {});
+    const ch = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
+    if (ch) ch.send(`👋 Hoşgeldin <@${member.id}>`);
 
-  const used = fresh.find(i =>
-    (cached?.get(i.code)?.uses || 0) < i.uses
-  );
+    // 👑 owner admin
+    if (member.id === OWNER_ID) {
+      const role = member.guild.roles.cache.get(ADMIN_ROLE_ID);
+      if (role) await member.roles.add(role).catch(() => {});
+    }
 
-  if (used?.inviter) {
-    const c = userInvites.get(used.inviter.id) || 0;
-    userInvites.set(used.inviter.id, c + 1);
+  } catch (e) {
+    console.log(e);
   }
-
-  invites.set(member.guild.id, fresh);
 });
 
-// ================= LOG =================
-function log(guild, text) {
-  const ch = guild.channels.cache.get(LOG_CHANNEL_ID);
-  if (!ch) return;
-  ch.send(`📊 LOG\n${text}`).catch(() => {});
-}
-
-client.on("messageDelete", (m) => {
-  if (!m.guild) return;
-  log(m.guild, `🗑️ Silindi: ${m.content || "boş"}`);
+// ================= LOG SYSTEM =================
+client.on("messageDelete", (message) => {
+  if (!message.guild) return;
+  const ch = message.guild.channels.cache.get(LOG_CHANNEL_ID);
+  if (ch) ch.send(`🗑️ Silindi: ${message.content || "boş"}`);
 });
 
-client.on("messageUpdate", (o, n) => {
-  if (!o.guild) return;
-  if (o.content === n.content) return;
+client.on("messageUpdate", (oldMsg, newMsg) => {
+  if (!oldMsg.guild) return;
+  if (oldMsg.content === newMsg.content) return;
 
-  log(o.guild, `✏️ Edit\nÖnce: ${o.content}\nSonra: ${n.content}`);
+  const ch = oldMsg.guild.channels.cache.get(LOG_CHANNEL_ID);
+  if (ch) {
+    ch.send(`✏️ Edit\nÖnce: ${oldMsg.content}\nSonra: ${newMsg.content}`);
+  }
 });
 
-// ================= MESSAGE =================
+// ================= MESSAGE COMMANDS =================
 client.on("messageCreate", async (message) => {
 
   if (message.author.bot || !message.guild) return;
 
-  const msg = message.content.toLowerCase().trim();
+  const isOwner = message.author.id === OWNER_ID;
 
-  // SELAM
-  if (["sa","selam","selamün aleyküm"].includes(msg)) {
-    return message.channel.send(`Aleyküm selam <@${message.author.id}> 👋`);
+  // 👋 SA
+  if (["sa", "selam"].includes(message.content.toLowerCase())) {
+    return message.reply("Aleyküm selam 👋");
   }
 
-  // IP
+  // 📡 IP
   if (message.content === "!ip") {
-    return message.channel.send(`mc.skyforgenw.com.tr`);
-  }
-
-  // -i
-  if (message.content === "-i") {
-    const c = userInvites.get(message.author.id) || 0;
-    return message.channel.send(`📨 Davet: **${c}**`);
+    return message.channel.send("mc.skyforgenw.com.tr");
   }
 
   // 🎟 TICKET PANEL
@@ -140,7 +114,6 @@ client.on("messageCreate", async (message) => {
 
     let ms = 60000;
     if (time?.endsWith("m")) ms = parseInt(time) * 60000;
-    if (time?.endsWith("h")) ms = parseInt(time) * 3600000;
 
     const users = [];
 
@@ -169,9 +142,15 @@ client.on("messageCreate", async (message) => {
       if (users.length === 0) return msg.edit("Katılım yok");
 
       const winner = users[Math.floor(Math.random() * users.length)];
-
       msg.edit(`🏆 Kazanan: <@${winner}>`);
     });
+  }
+
+  // 🔥 OWNER SHUTDOWN
+  if (message.content === "!shutdown") {
+    if (!isOwner) return;
+    await message.channel.send("Bot kapanıyor...");
+    process.exit(0);
   }
 });
 
@@ -180,14 +159,9 @@ client.on("interactionCreate", async (i) => {
 
   if (!i.isButton() && !i.isStringSelectMenu()) return;
 
-  const roles = [
-    "1506367703810707456",
-    "1506368461964705924"
-  ];
+  const roles = [`<@&${ADMIN_ROLE_ID}>`].join(" ");
 
-  const rolePing = roles.map(r => `<@&${r}>`).join(" ");
-
-  // OPEN
+  // 🎟 OPEN
   if (i.customId === "ticket_open") {
 
     const menu = new StringSelectMenuBuilder()
@@ -207,7 +181,7 @@ client.on("interactionCreate", async (i) => {
     });
   }
 
-  // CREATE
+  // 🎟 CREATE
   if (i.customId === "ticket_category") {
 
     const ch = await i.guild.channels.create({
@@ -220,15 +194,12 @@ client.on("interactionCreate", async (i) => {
         },
         {
           id: i.user.id,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.SendMessages
-          ]
+          allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages]
         }
       ]
     });
 
-    await ch.send(`🎟 Ticket Açıldı\n${rolePing}\n<@${i.user.id}>`);
+    await ch.send(`🎟 Ticket Açıldı\n<@&${ADMIN_ROLE_ID}>\n<@${i.user.id}>`);
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -242,16 +213,17 @@ client.on("interactionCreate", async (i) => {
     return i.reply({ content: "Ticket açıldı", ephemeral: true });
   }
 
-  // CLOSE
+  // ❌ CLOSE
   if (i.customId === "ticket_close") {
     await i.reply("Kapatılıyor...");
     setTimeout(() => i.channel.delete().catch(() => {}), 2000);
   }
 
-  // GIVEAWAY BUTTON
+  // 🎉 GIVEAWAY
   if (i.customId === "giveaway_join") {
     return i.reply({ content: "Katıldın", ephemeral: true });
   }
 });
 
+// ================= LOGIN =================
 client.login(TOKEN);
