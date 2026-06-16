@@ -1,12 +1,16 @@
+const { ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
+
 module.exports = {
   name: "ticket",
 
-  async execute(message) {
-    const channel = await message.guild.channels.create({
-      name: `ticket-${message.author.username}`,
-      type: 0
-    });
+  execute(message) {
+    const btn = new ButtonBuilder()
+      .setCustomId("ticket_open")
+      .setLabel("Ticket Aç")
+      .setStyle(ButtonStyle.Primary);
 
-    channel.send(`🎟 Ticket açıldı <@${message.author.id}>`);
+    const row = new ActionRowBuilder().addComponents(btn);
+
+    message.channel.send({ content: "🎟 Ticket panel", components: [row] });
   }
 };
