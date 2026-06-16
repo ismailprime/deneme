@@ -21,7 +21,7 @@ module.exports = {
 
     const rolePing = roles.map(r => `<@&${r}>`).join(" ");
 
-    // 🎟 OPEN PANEL
+    // OPEN
     if (i.customId === "ticket_open") {
 
       const menu = new StringSelectMenuBuilder()
@@ -41,13 +41,11 @@ module.exports = {
       });
     }
 
-    // 🎟 CREATE
+    // CREATE
     if (i.customId === "ticket_category") {
 
-      const cat = i.values[0];
-
       const ch = await i.guild.channels.create({
-        name: `ticket-${cat}-${i.user.username}`,
+        name: `ticket-${i.values[0]}-${i.user.username}`,
         type: ChannelType.GuildText,
         permissionOverwrites: [
           {
@@ -78,10 +76,15 @@ module.exports = {
       return i.reply({ content: "Ticket açıldı", ephemeral: true });
     }
 
-    // ❌ CLOSE
+    // CLOSE
     if (i.customId === "ticket_close") {
       await i.reply("Kapatılıyor...");
       setTimeout(() => i.channel.delete().catch(() => {}), 2000);
+    }
+
+    // GIVEAWAY
+    if (i.customId === "giveaway_join") {
+      return i.reply({ content: "Katıldın", ephemeral: true });
     }
   }
 };
