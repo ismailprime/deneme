@@ -9,7 +9,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setTitle("🎟 Ticket Sistemi")
-      .setDescription("Butona basarak ticket aç")
+      .setDescription("Ticket açmak için butona bas")
       .setColor("Blue");
 
     const row = new ActionRowBuilder().addComponents(
