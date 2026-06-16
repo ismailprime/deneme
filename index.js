@@ -26,9 +26,6 @@ const ROLE_1 = "1506368461964705924";
 const ROLE_2 = "1506367703810707456";
 const ROLE_3 = "1506369036772966401";
 
-// ================= SYSTEM =================
-let botDisabled = false;
-
 // ================= CLIENT =================
 const client = new Client({
   intents: [
@@ -45,26 +42,24 @@ client.once("ready", () => {
   console.log(`${client.user.tag} aktif`);
 });
 
-// ================= GLOBAL BLOCK =================
+// ================= MESSAGE =================
 client.on("messageCreate", async (message) => {
 
   if (!message.guild || message.author.bot) return;
 
-  if (botDisabled && message.author.id !== OWNER_ID) return;
-
   const msg = message.content.toLowerCase();
 
-  // 👋 SA
+  // SA
   if (["sa", "selam"].includes(msg)) {
     return message.reply("Aleyküm selam 👋");
   }
 
-  // 📡 IP
+  // IP
   if (message.content === "!ip") {
     return message.channel.send("mc.skyforgenw.com.tr");
   }
 
-  // 🎟 TICKET PANEL
+  // TICKET PANEL
   if (message.content === "!ticket") {
 
     const row = new ActionRowBuilder().addComponents(
@@ -75,12 +70,12 @@ client.on("messageCreate", async (message) => {
     );
 
     return message.channel.send({
-      content: "🎟 Ticket sistemi aktif",
+      content: "🎟 Ticket sistemi",
       components: [row]
     });
   }
 
-  // 🎉 ÇEKİLİŞ
+  // ÇEKİLİŞ
   if (message.content.startsWith("!cekilis")) {
 
     const args = message.content.split(" ");
@@ -103,10 +98,7 @@ client.on("messageCreate", async (message) => {
     );
 
     const msgGiveaway = await message.channel.send({
-      content:
-`🎉 ÇEKİLİŞ
-🎁 ${prize}
-⏰ ${time}`,
+      content: `🎉 ÇEKİLİŞ\n🎁 ${prize}\n⏰ ${time}`,
       components: [row]
     });
 
@@ -122,7 +114,7 @@ client.on("messageCreate", async (message) => {
     collector.on("end", () => {
 
       if (users.length === 0) {
-        return msgGiveaway.edit("❌ Katılım olmadı");
+        return msgGiveaway.edit("❌ Katılım yok");
       }
 
       const winner = users[Math.floor(Math.random() * users.length)];
@@ -137,57 +129,31 @@ tebrikler çekilişi kazandınız <@${winner}> ticket açarak ödülünüzü tal
       );
     });
   }
-
-  // 🔥 TOGGLE SHUTDOWN
-  if (message.content === "!shutdown") {
-
-    if (message.author.id !== OWNER_ID) return;
-
-    botDisabled = !botDisabled;
-
-    return message.channel.send(
-      botDisabled ? "🔴 Bot kapalı (bakım)" : "🟢 Bot açık"
-    );
-  }
 });
 
-// ================= WELCOME EMBED =================
+// ================= WELCOME =================
 client.on("guildMemberAdd", async (member) => {
 
   const ch = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
   if (!ch) return;
 
   const embed = new EmbedBuilder()
-    .setColor("Green")
     .setTitle("👋 Hoşgeldin!")
-    .setDescription(
-`👤 <@${member.id}>
-📊 Üye sırası: ${member.guild.memberCount}
-🎮 Sunucuya hoş geldin!`
-    )
-    .setThumbnail(member.user.displayAvatarURL({ dynamic: true }));
+    .setDescription(`<@${member.id}> sunucuya katıldı!`)
+    .setColor("Green");
 
   ch.send({ embeds: [embed] });
 });
 
 // ================= LOG =================
-client.on("messageDelete", async (message) => {
+client.on("messageDelete", async (m) => {
+  if (!m.guild) return;
 
-  if (!message.guild) return;
-
-  const ch = message.guild.channels.cache.get(LOG_CHANNEL_ID);
-  if (ch) ch.send(`🗑️ Silindi: ${message.content || "boş"}`);
+  const ch = m.guild.channels.cache.get(LOG_CHANNEL_ID);
+  if (ch) ch.send(`🗑️ Silindi: ${m.content || "boş"}`);
 });
 
-client.on("messageUpdate", async (o, n) => {
-
-  if (!o.guild || o.content === n.content) return;
-
-  const ch = o.guild.channels.cache.get(LOG_CHANNEL_ID);
-  if (ch) ch.send(`✏️ Edit\nÖnce: ${o.content}\nSonra: ${n.content}`);
-});
-
-// ================= INTERACTIONS =================
+// ================= INTERACTION =================
 client.on("interactionCreate", async (i) => {
 
   if (!i.isButton() && !i.isStringSelectMenu()) return;
@@ -277,22 +243,16 @@ client.on("interactionCreate", async (i) => {
 
     if (logChannel) {
       logChannel.send({
-        content:
-`📄 Ticket kapatıldı
-📌 ${channel.name}
-👤 ${channel.ticketOwner}
-🔒 ${i.user.tag}`,
+        content: `📄 Ticket kapatıldı\n📌 ${channel.name}\n🔒 ${i.user.tag}`,
         files: [filePath]
       });
     }
 
-    // DM USER
     try {
       const user = await i.client.users.fetch(channel.ticketOwner);
-      user.send("🎟 Ticket kapatıldı, transcript ektedir.").catch(() => {});
+      user.send("🎟 Ticket kapatıldı").catch(() => {});
     } catch {}
 
-    // DM OWNER
     try {
       const owner = await i.client.users.fetch(OWNER_ID);
       owner.send(`🛑 Ticket kapandı: ${channel.name}`).catch(() => {});
