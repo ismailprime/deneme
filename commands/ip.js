@@ -2,16 +2,12 @@ module.exports = {
   name: "ip",
 
   execute(message) {
-    message.reply({
-      content: `
-**Java**
-Sürüm: 1.9 - 1.21.x
-IP: mc.skyforgenw.com.tr
+    message.reply(`
+Java: 1.9 - 1.21.x
+mc.skyforgenw.com.tr
 
-**Bedrock**
-Sürüm: Yakında
-IP: mc.skyforgenw.com.tr
-`
-    });
+Bedrock: Yakında
+mc.skyforgenw.com.tr
+`);
   }
 };
