@@ -7,23 +7,13 @@ const {
   ButtonBuilder,
   ButtonStyle,
   StringSelectMenuBuilder,
-  ChannelType,
-  EmbedBuilder
+  ChannelType
 } = require("discord.js");
 
-// ================= CONFIG =================
 const TOKEN = process.env.TOKEN;
 
 const OWNER_ID = "1003708560728920165";
-const ADMIN_ROLE_ID = "1506368461964705924";
 
-const LOG_CHANNEL_ID = "1512629605830716257";
-const WELCOME_CHANNEL_ID = "1506386634357211187";
-
-// 🔴 TOGGLE SYSTEM
-let botDisabled = false;
-
-// ================= CLIENT =================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -44,26 +34,7 @@ client.on("messageCreate", async (message) => {
 
   if (!message.guild || message.author.bot) return;
 
-  const isOwner = message.author.id === OWNER_ID;
-
-  if (botDisabled && !isOwner) return;
-
-  const msg = message.content.toLowerCase();
-
-  // 👋 SELAM
-  if (["sa", "selam"].includes(msg)) {
-    return message.reply("Aleyküm selam 👋");
-  }
-
-  // 📡 IP
-  if (message.content === "!ip") {
-    return message.channel.send("mc.skyforgenw.com.tr");
-  }
-
-  // 🎟 TICKET
   if (message.content === "!ticket") {
-
-    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) return;
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -77,132 +48,22 @@ client.on("messageCreate", async (message) => {
       components: [row]
     });
   }
-
-  // 🎉 ÇEKİLİŞ
-  if (message.content.startsWith("!cekilis")) {
-
-    const args = message.content.split(" ");
-    const time = args[1];
-    const prize = args.slice(2).join(" ");
-
-    let ms = 60000;
-    if (time.endsWith("m")) ms = parseInt(time) * 60000;
-    if (time.endsWith("h")) ms = parseInt(time) * 3600000;
-
-    const users = [];
-
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("giveaway_join")
-        .setLabel("🎉 Katıl")
-        .setStyle(ButtonStyle.Success)
-    );
-
-    const msgGiveaway = await message.channel.send({
-      content:
-`🎉 ÇEKİLİŞ
-🎁 ${prize}
-⏰ ${time}`,
-      components: [row]
-    });
-
-    const collector = msgGiveaway.createMessageComponentCollector({ time: ms });
-
-    collector.on("collect", (i) => {
-      if (!users.includes(i.user.id)) {
-        users.push(i.user.id);
-        i.reply({ content: "Katıldın 🎉", ephemeral: true });
-      }
-    });
-
-    collector.on("end", () => {
-
-      if (users.length === 0) {
-        return msgGiveaway.edit("❌ Katılım olmadı");
-      }
-
-      const winner = users[Math.floor(Math.random() * users.length)];
-
-      msgGiveaway.edit(
-`🎉 ÇEKİLİŞ BİTTİ
-🎁 ${prize}
-⏰ ${time}
-
-🏆 Kazanan: <@${winner}>
-
-tebrikler çekilişi kazandınız <@${winner}> ticket açarak ödülünüzü talep ediniz`
-      );
-    });
-  }
-
-  // 🔥 TOGGLE
-  if (message.content === "!shutdown") {
-    if (!isOwner) return;
-
-    botDisabled = !botDisabled;
-
-    return message.channel.send(
-      botDisabled ? "🔴 Bot kapatıldı" : "🟢 Bot açıldı"
-    );
-  }
 });
 
-// ================= WELCOME (EMBED) =================
-client.on("guildMemberAdd", async (member) => {
-
-  const ch = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
-  if (!ch) return;
-
-  const embed = new EmbedBuilder()
-    .setColor("Green")
-    .setTitle("👋 Sunucuya Hoşgeldin!")
-    .setDescription(
-`👤 Kullanıcı: <@${member.id}>
-🆔 ID: ${member.id}
-📊 Sıra: ${member.guild.memberCount}. üye
-
-🎮 Keyifli vakit geçir!`
-    )
-    .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-    .setFooter({ text: "Skyforge Network" });
-
-  ch.send({ embeds: [embed] });
-
-  // 👑 OWNER AUTO ADMIN
-  if (member.id === OWNER_ID) {
-    const role = member.guild.roles.cache.get(ADMIN_ROLE_ID);
-    if (role) await member.roles.add(role).catch(() => {});
-  }
-});
-
-// ================= LOG =================
-client.on("messageDelete", (message) => {
-  if (!message.guild) return;
-  const ch = message.guild.channels.cache.get(LOG_CHANNEL_ID);
-  if (ch) ch.send(`🗑️ Silindi: ${message.content || "boş"}`);
-});
-
-client.on("messageUpdate", (o, n) => {
-  if (!o.guild) return;
-  if (o.content === n.content) return;
-
-  const ch = o.guild.channels.cache.get(LOG_CHANNEL_ID);
-  if (ch) ch.send(`✏️ Edit\nÖnce: ${o.content}\nSonra: ${n.content}`);
-});
-
-// ================= INTERACTIONS =================
+// ================= INTERACTION =================
 client.on("interactionCreate", async (i) => {
 
   if (!i.isButton() && !i.isStringSelectMenu()) return;
 
+  // ================= OPEN MENU =================
   if (i.customId === "ticket_open") {
 
     const menu = new StringSelectMenuBuilder()
       .setCustomId("ticket_category")
       .setPlaceholder("Kategori seç")
       .addOptions(
-        { label: "Bug", value: "bug" },
         { label: "Destek", value: "destek" },
+        { label: "Bug", value: "bug" },
         { label: "Şikayet", value: "sikayet" },
         { label: "Diğer", value: "diger" }
       );
@@ -214,6 +75,7 @@ client.on("interactionCreate", async (i) => {
     });
   }
 
+  // ================= CREATE TICKET =================
   if (i.customId === "ticket_category") {
 
     const ch = await i.guild.channels.create({
@@ -226,12 +88,40 @@ client.on("interactionCreate", async (i) => {
         },
         {
           id: i.user.id,
-          allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages]
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory
+          ]
         }
       ]
     });
 
-    await ch.send(`🎟 Ticket Açıldı <@${i.user.id}>`);
+    ch.ticketOwner = i.user.id;
+
+    // 🔥 PING FIX (KESİN ÇALIŞIR)
+    await ch.send({
+      content:
+`🎟 **Ticket Açıldı**
+
+👤 Açan: <@${i.user.id}>
+
+📣 Yetkililer:
+<@&1506368461964705924>
+<@&1506367703810707456>
+<@&1506369036772966401>
+
+👑 Owner: <@${OWNER_ID}>`,
+
+      allowedMentions: {
+        roles: [
+          "1506368461964705924",
+          "1506367703810707456",
+          "1506369036772966401"
+        ],
+        users: [OWNER_ID, i.user.id]
+      }
+    });
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -242,16 +132,17 @@ client.on("interactionCreate", async (i) => {
 
     await ch.send({ components: [row] });
 
-    return i.reply({ content: "Ticket açıldı", ephemeral: true });
+    return i.reply({ content: "Ticket açıldı 🎟", ephemeral: true });
   }
 
+  // ================= CLOSE =================
   if (i.customId === "ticket_close") {
-    await i.reply("Kapatılıyor...");
-    setTimeout(() => i.channel.delete().catch(() => {}), 2000);
-  }
 
-  if (i.customId === "giveaway_join") {
-    return i.reply({ content: "Katıldın 🎉", ephemeral: true });
+    await i.reply("📦 Ticket kapatılıyor...");
+
+    setTimeout(() => {
+      i.channel.delete().catch(() => {});
+    }, 2000);
   }
 });
 
