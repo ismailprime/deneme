@@ -7,17 +7,22 @@ const {
   StringSelectMenuBuilder
 } = require("discord.js");
 
-const activeTickets = new Map();
-
 module.exports = {
   name: "interactionCreate",
 
-  async execute(interaction) {
+  async execute(i) {
 
-    if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
+    if (!i.isButton() && !i.isStringSelectMenu()) return;
 
-    // 🎟 OPEN
-    if (interaction.customId === "ticket_open") {
+    const roles = [
+      "1506367703810707456",
+      "1506368461964705924"
+    ];
+
+    const rolePing = roles.map(r => `<@&${r}>`).join(" ");
+
+    // OPEN
+    if (i.customId === "ticket_open") {
 
       const menu = new StringSelectMenuBuilder()
         .setCustomId("ticket_category")
@@ -29,32 +34,28 @@ module.exports = {
           { label: "Diğer", value: "diger" }
         );
 
-      return interaction.reply({
+      return i.reply({
         content: "Kategori seç",
         components: [new ActionRowBuilder().addComponents(menu)],
         ephemeral: true
       });
     }
 
-    // 🎫 CATEGORY
-    if (interaction.customId === "ticket_category") {
+    // CREATE
+    if (i.customId === "ticket_category") {
 
-      const category = interaction.values[0];
+      const cat = i.values[0];
 
-      if (activeTickets.has(interaction.user.id)) {
-        return interaction.reply({ content: "Zaten ticket var", ephemeral: true });
-      }
-
-      const channel = await interaction.guild.channels.create({
-        name: `ticket-${category}-${interaction.user.username}`,
+      const ch = await i.guild.channels.create({
+        name: `ticket-${cat}-${i.user.username}`,
         type: ChannelType.GuildText,
         permissionOverwrites: [
           {
-            id: interaction.guild.id,
+            id: i.guild.id,
             deny: [PermissionsBitField.Flags.ViewChannel]
           },
           {
-            id: interaction.user.id,
+            id: i.user.id,
             allow: [
               PermissionsBitField.Flags.ViewChannel,
               PermissionsBitField.Flags.SendMessages
@@ -63,7 +64,7 @@ module.exports = {
         ]
       });
 
-      activeTickets.set(interaction.user.id, channel.id);
+      await ch.send(`🎟 Ticket açıldı\n${rolePing}\n<@${i.user.id}>`);
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -72,24 +73,35 @@ module.exports = {
           .setStyle(ButtonStyle.Danger)
       );
 
-      await channel.send({
-        content: `🎟 Ticket açıldı: ${category}`,
-        components: [row]
-      });
+      await ch.send({ components: [row] });
 
-      return interaction.reply({ content: `Ticket açıldı ${channel}`, ephemeral: true });
+      return i.reply({ content: "Ticket açıldı", ephemeral: true });
     }
 
-    // ❌ CLOSE
-    if (interaction.customId === "ticket_close") {
+    // CLOSE + DM TRANSCRIPT
+    if (i.customId === "ticket_close") {
 
-      const owner = [...activeTickets.entries()]
-        .find(x => x[1] === interaction.channel.id);
+      const msgs = await i.channel.messages.fetch({ limit: 50 });
 
-      if (owner) activeTickets.delete(owner[0]);
+      const transcript = msgs
+        .map(m => `${m.author.tag}: ${m.content}`)
+        .reverse()
+        .join("\n");
 
-      await interaction.reply("Kapatılıyor...");
-      setTimeout(() => interaction.channel.delete(), 2000);
+      const ownerId = i.channel.name.split("-").pop();
+      const user = await i.guild.members.fetch(ownerId).catch(() => null);
+
+      if (user) {
+        user.send(`🎟 Ticket kapatıldı:\n\n${transcript}`).catch(() => {});
+      }
+
+      i.reply("Kapatılıyor...");
+      setTimeout(() => i.channel.delete(), 2000);
+    }
+
+    // GIVEAWAY BUTTON
+    if (i.customId === "giveaway_join") {
+      return i.reply({ content: "Katıldın", ephemeral: true });
     }
   }
 };
