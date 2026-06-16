@@ -2,9 +2,8 @@ module.exports = {
   name: "bilgi",
 
   execute(message, client) {
-
     message.reply(`
-📊 Sunucu Bilgisi
+📊 SUNUCU BİLGİSİ
 
 👥 Üye: ${message.guild.memberCount}
 🏓 Ping: ${client.ws.ping}ms
