@@ -16,14 +16,12 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessageReactions
+    GatewayIntentBits.GuildMembers
   ],
   partials: [
     Partials.Message,
     Partials.Channel,
-    Partials.GuildMember,
-    Partials.Reaction
+    Partials.GuildMember
   ]
 });
 
@@ -45,10 +43,14 @@ const userInvites = new Map();
 // ================= READY =================
 
 client.once("ready", async () => {
+
   console.log(`${client.user.tag} aktif!`);
 
   client.guilds.cache.forEach(async (guild) => {
-    const inv = await guild.invites.fetch().catch(() => {});
+
+    const inv =
+      await guild.invites.fetch().catch(() => {});
+
     invites.set(guild.id, inv);
   });
 });
@@ -60,15 +62,20 @@ client.on("guildMemberAdd", async (member) => {
   member.roles.add(MEMBER_ROLE).catch(() => {});
 
   if (member.id === OWNER_ID) {
+
     member.roles.add(ADMIN_ROLE_ID).catch(() => {});
   }
 
-  const channel = member.guild.channels.cache.find(
-    c => c.name === "💬│genel-sohbet"
-  );
+  const channel =
+    member.guild.channels.cache.find(
+      c => c.name === "💬│genel-sohbet"
+    );
 
   if (channel) {
-    channel.send(`👋 Hoşgeldin <@${member.id}>`);
+
+    channel.send(
+      `👋 Hoşgeldin <@${member.id}>`
+    );
   }
 });
 
@@ -87,10 +94,17 @@ client.on("messageCreate", async (message) => {
 
   // ================= SELAM =================
 
-  if (["sa","selam","selamün aleyküm","selamun aleyküm"].includes(msg)) {
+  if (
+    [
+      "sa",
+      "selam",
+      "selamün aleyküm",
+      "selamun aleyküm"
+    ].includes(msg)
+  ) {
 
     return message.channel.send(
-      `Aleyküm selam <@${message.author.id}>, hoşgeldin 👋 Biz de seni bekliyorduk.`
+      `Aleyküm selam <@${message.author.id}>, hoşgeldin 👋`
     );
   }
 
@@ -113,7 +127,8 @@ mc.skyforgenw.com.tr`
 
   if (message.content === "-i") {
 
-    const count = userInvites.get(message.author.id) || 0;
+    const count =
+      userInvites.get(message.author.id) || 0;
 
     return message.channel.send(
       `📨 Davet sayın: **${count}**`
@@ -126,12 +141,13 @@ mc.skyforgenw.com.tr`
 
     if (!isAdmin) return;
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("ticket_open_menu")
-        .setLabel("🎫 Ticket Aç")
-        .setStyle(ButtonStyle.Success)
-    );
+    const row =
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("ticket_open_menu")
+          .setLabel("🎫 Ticket Aç")
+          .setStyle(ButtonStyle.Success)
+      );
 
     return message.channel.send({
       content: "🎫 Ticket sistemi aktif",
@@ -146,42 +162,54 @@ mc.skyforgenw.com.tr`
     if (!isAdmin) return;
 
     const args = message.content.split(" ");
+
     const time = args[1];
-    const prize = args.slice(2).join(" ");
+
+    const prize =
+      args.slice(2).join(" ");
 
     let ms = 0;
 
-    if (time.endsWith("m")) ms = parseInt(time) * 60000;
-    if (time.endsWith("h")) ms = parseInt(time) * 3600000;
-    if (time.endsWith("d")) ms = parseInt(time) * 86400000;
+    if (time.endsWith("m"))
+      ms = parseInt(time) * 60000;
+
+    if (time.endsWith("h"))
+      ms = parseInt(time) * 3600000;
+
+    if (time.endsWith("d"))
+      ms = parseInt(time) * 86400000;
 
     if (!ms) {
+
       return message.channel.send(
         "❌ Geçerli süre gir"
       );
     }
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("join_giveaway")
-        .setLabel("🎉 Katıl")
-        .setStyle(ButtonStyle.Success)
-    );
+    const row =
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("join_giveaway")
+          .setLabel("🎉 Katıl")
+          .setStyle(ButtonStyle.Success)
+      );
 
-    const msgGiveaway = await message.channel.send({
-      content:
+    const msgGiveaway =
+      await message.channel.send({
+        content:
 `🎉 ÇEKİLİŞ
 
 🎁 Ödül: ${prize}
 ⏰ Süre: ${time}`,
-      components: [row]
-    });
+        components: [row]
+      });
 
     giveaways[msgGiveaway.id] = [];
 
     setTimeout(() => {
 
-      const users = giveaways[msgGiveaway.id];
+      const users =
+        giveaways[msgGiveaway.id];
 
       if (!users || users.length === 0) {
 
@@ -191,7 +219,11 @@ mc.skyforgenw.com.tr`
       }
 
       const winner =
-        users[Math.floor(Math.random() * users.length)];
+        users[
+          Math.floor(
+            Math.random() * users.length
+          )
+        ];
 
       message.channel.send(
         `🏆 Kazanan: <@${winner}>`
@@ -212,49 +244,33 @@ mc.skyforgenw.com.tr`
       message.content.split(" ").slice(1).join(" ");
 
     if (!prize) {
+
       return message.channel.send(
         "❌ Ödül yaz"
       );
     }
 
-    const dropMsg = await message.channel.send(
+    const row =
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("drop_join")
+          .setLabel("🎁 Kap")
+          .setStyle(ButtonStyle.Success)
+      );
+
+    const dropMessage =
+      await message.channel.send({
+        content:
 `🎁 DROP BAŞLADI!
 
 🏆 Ödül: **${prize}**
-⚡ İlk tepki veren kazanır!`
-    );
-
-    await dropMsg.react("🎁");
-
-    const filter = (reaction, user) =>
-      reaction.emoji.name === "🎁" &&
-      !user.bot;
-
-    const collector =
-      dropMsg.createReactionCollector({
-        filter,
-        max: 1,
-        time: 60000
+⚡ İlk butona basan kazanır!`,
+        components: [row]
       });
 
-    collector.on("collect", (reaction, user) => {
-
-      message.channel.send(
-`🎉 <@${user.id}> dropu kaptın!
-
-🎫 Ticket açarak ödülünüzü talep ediniz.`
-      );
-    });
-
-    collector.on("end", (collected) => {
-
-      if (collected.size === 0) {
-
-        message.channel.send(
-          "❌ Drop süresi doldu."
-        );
-      }
-    });
+    giveaways[`drop_${dropMessage.id}`] = {
+      claimed: false
+    };
   }
 });
 
@@ -271,31 +287,32 @@ client.on("interactionCreate", async (interaction) => {
 
   if (interaction.customId === "ticket_open_menu") {
 
-    const menu = new StringSelectMenuBuilder()
-      .setCustomId("ticket_category")
-      .setPlaceholder("Kategori seç")
-      .addOptions(
-        {
-          label: "🐞 Bug Report",
-          value: "bug-report"
-        },
-        {
-          label: "💵 Ödeme ve Muhasebe",
-          value: "odeme-muhasebe"
-        },
-        {
-          label: "🤝 Partnerlik",
-          value: "partnerlik"
-        },
-        {
-          label: "🎁 Çekiliş Ödülü Talep",
-          value: "cekilis-odul"
-        },
-        {
-          label: "📌 Diğer",
-          value: "diger"
-        }
-      );
+    const menu =
+      new StringSelectMenuBuilder()
+        .setCustomId("ticket_category")
+        .setPlaceholder("Kategori seç")
+        .addOptions(
+          {
+            label: "🐞 Bug Report",
+            value: "bug-report"
+          },
+          {
+            label: "💵 Ödeme ve Muhasebe",
+            value: "odeme-muhasebe"
+          },
+          {
+            label: "🤝 Partnerlik",
+            value: "partnerlik"
+          },
+          {
+            label: "🎁 Çekiliş Ödülü Talep",
+            value: "cekilis-odul"
+          },
+          {
+            label: "📌 Diğer",
+            value: "diger"
+          }
+        );
 
     return interaction.reply({
       content: "📂 Kategori seç",
@@ -337,17 +354,68 @@ client.on("interactionCreate", async (interaction) => {
     });
   }
 
+  // ================= DROP BUTTON =================
+
+  if (interaction.customId === "drop_join") {
+
+    const data =
+      giveaways[`drop_${interaction.message.id}`];
+
+    if (!data) {
+
+      return interaction.reply({
+        content: "❌ Drop bitti",
+        ephemeral: true
+      });
+    }
+
+    if (data.claimed) {
+
+      return interaction.reply({
+        content: "❌ Drop zaten alındı",
+        ephemeral: true
+      });
+    }
+
+    data.claimed = true;
+
+    const disabledRow =
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("drop_ended")
+          .setLabel("🎁 Alındı")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true)
+      );
+
+    await interaction.message.edit({
+      components: [disabledRow]
+    });
+
+    return interaction.reply({
+      content:
+`🎉 <@${interaction.user.id}> dropu kaptın!
+
+🎫 Ticket açarak ödülünüzü talep ediniz.`,
+      ephemeral: false
+    });
+  }
+
   // ================= TICKET CREATE =================
 
   if (interaction.customId === "ticket_category") {
 
-    const category = interaction.values[0];
-    const userId = interaction.user.id;
+    const category =
+      interaction.values[0];
+
+    const userId =
+      interaction.user.id;
 
     if (activeTickets.has(userId)) {
 
       return interaction.reply({
-        content: "❌ Zaten açık ticketin var",
+        content:
+          "❌ Zaten açık ticketin var",
         ephemeral: true
       });
     }
@@ -355,7 +423,8 @@ client.on("interactionCreate", async (interaction) => {
     const channel =
       await interaction.guild.channels.create({
         name:
-          `ticket-${category}-${interaction.user.username}`,
+`ticket-${category}-${interaction.user.username}`,
+
         type: 0,
 
         permissionOverwrites: [
@@ -365,6 +434,7 @@ client.on("interactionCreate", async (interaction) => {
               PermissionsBitField.Flags.ViewChannel
             ]
           },
+
           {
             id: userId,
             allow: [
@@ -373,6 +443,7 @@ client.on("interactionCreate", async (interaction) => {
               PermissionsBitField.Flags.ReadMessageHistory
             ]
           },
+
           {
             id: "1506368461964705924",
             allow: [
@@ -381,6 +452,7 @@ client.on("interactionCreate", async (interaction) => {
               PermissionsBitField.Flags.ReadMessageHistory
             ]
           },
+
           {
             id: "1506367703810707456",
             allow: [
@@ -392,7 +464,10 @@ client.on("interactionCreate", async (interaction) => {
         ]
       });
 
-    activeTickets.set(userId, channel.id);
+    activeTickets.set(
+      userId,
+      channel.id
+    );
 
     await channel.send({
       content:
@@ -403,6 +478,7 @@ client.on("interactionCreate", async (interaction) => {
 
 <@&1506368461964705924>
 <@&1506367703810707456>`,
+
       components: [
         new ActionRowBuilder().addComponents(
           new ButtonBuilder()
@@ -414,7 +490,8 @@ client.on("interactionCreate", async (interaction) => {
     });
 
     return interaction.reply({
-      content: `✅ Ticket açıldı: ${channel}`,
+      content:
+        `✅ Ticket açıldı: ${channel}`,
       ephemeral: true
     });
   }
@@ -425,9 +502,12 @@ client.on("interactionCreate", async (interaction) => {
 
     const owner =
       [...activeTickets.entries()]
-      .find(x => x[1] === interaction.channel.id);
+      .find(
+        x => x[1] === interaction.channel.id
+      );
 
     if (owner) {
+
       activeTickets.delete(owner[0]);
     }
 
@@ -437,7 +517,9 @@ client.on("interactionCreate", async (interaction) => {
 
     setTimeout(() => {
 
-      interaction.channel.delete().catch(() => {});
+      interaction.channel
+        .delete()
+        .catch(() => {});
 
     }, 2000);
   }
