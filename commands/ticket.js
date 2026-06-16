@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
 module.exports = {
   name: "ticket",
@@ -7,18 +7,16 @@ module.exports = {
 
     if (!message.member.permissions.has("Administrator")) return;
 
-    const embed = new EmbedBuilder()
-      .setTitle("🎟 Ticket Sistemi")
-      .setDescription("Ticket açmak için butona bas")
-      .setColor("Blue");
-
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("ticket_open")
-        .setLabel("Ticket Aç")
-        .setStyle(ButtonStyle.Primary)
+        .setLabel("🎟 Ticket Aç")
+        .setStyle(ButtonStyle.Success)
     );
 
-    message.channel.send({ embeds: [embed], components: [row] });
+    message.channel.send({
+      content: "Ticket sistemi",
+      components: [row]
+    });
   }
 };
