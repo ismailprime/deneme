@@ -1,60 +1,34 @@
-const { status } = require("minecraft-server-util");
-
 module.exports = {
   name: "bilgi",
 
-  async execute(message) {
+  execute(message, client) {
 
-    const ip = "mc.skyforgenw.com.tr";
+    const guild = message.guild;
 
-    try {
-
-      const data = await status(ip);
-
-      const online = data?.players?.online ?? 0;
-      const max = data?.players?.max ?? "?";
-      const ping = data?.latency ?? "?"
-
-      return message.channel.send({
-        embeds: [
-          {
-            title: "📊 Sunucu Durumu",
-            color: 0x00ff99,
-            fields: [
-              {
-                name: "👥 Oyuncular",
-                value: `${online} / ${max}`,
-                inline: true
-              },
-              {
-                name: "🏓 Ping",
-                value: `${ping} ms`,
-                inline: true
-              },
-              {
-                name: "🌐 IP",
-                value: ip,
-                inline: false
-              }
-            ]
-          }
-        ]
-      });
-
-    } catch (err) {
-
-      console.log("MC ERROR:", err);
-
-      return message.channel.send({
-        embeds: [
-          {
-            title: "📊 Sunucu Durumu",
-            color: 0xff0000,
-            description: "🔴 Sunucuya ulaşılamıyor (offline / plugin / firewall)"
-          }
-        ]
-      });
-
-    }
+    message.channel.send({
+      embeds: [
+        {
+          title: "📊 Sunucu Bilgisi",
+          color: 0x00ff99,
+          fields: [
+            {
+              name: "👥 Üye Sayısı",
+              value: `${guild.memberCount}`,
+              inline: true
+            },
+            {
+              name: "🏓 Bot Ping",
+              value: `${client.ws.ping} ms`,
+              inline: true
+            },
+            {
+              name: "📡 Sunucu Adı",
+              value: guild.name,
+              inline: false
+            }
+          ]
+        }
+      ]
+    });
   }
 };
