@@ -1,4 +1,4 @@
-const { queryFull } = require("minecraft-server-util");
+const { statusBedrock } = require("minecraft-server-util");
 
 module.exports = {
   name: "bilgi",
@@ -8,73 +8,40 @@ module.exports = {
     const ip = "mc.skyforgenw.com.tr";
     const port = 19132;
 
-    // 📊 ilk mesaj
-    const msg = await message.channel.send("📡 Sunucu verileri yükleniyor...");
+    try {
 
-    // 🔄 LIVE UPDATE (her 10 saniye)
-    const interval = setInterval(async () => {
+      const data = await statusBedrock(ip, port);
 
-      try {
-        const data = await queryFull(ip, port);
+      const embed = {
+        title: "📊 SkyForge Network (Bedrock)",
+        color: 0x00ff99,
+        fields: [
+          {
+            name: "👥 Oyuncular",
+            value: `${data.players.online} / ${data.players.max}`,
+            inline: true
+          },
+          {
+            name: "🏓 Ping",
+            value: `${data.roundTripLatency} ms`,
+            inline: true
+          },
+          {
+            name: "🌐 IP",
+            value: `${ip}:${port}`,
+            inline: false
+          }
+        ]
+      };
 
-        msg.edit({
-          embeds: [
-            {
-              title: "📊 SkyForge Network LIVE",
-              color: 0x00ff99,
-              fields: [
-                {
-                  name: "👥 Oyuncular",
-                  value: `${data.players.online} / ${data.players.max}`,
-                  inline: true
-                },
-                {
-                  name: "🏓 Ping",
-                  value: `${data.ping} ms`,
-                  inline: true
-                },
-                {
-                  name: "🌐 IP",
-                  value: ip,
-                  inline: false
-                },
-                {
-                  name: "📡 Durum",
-                  value: "🟢 Online",
-                  inline: true
-                }
-              ]
-            }
-          ]
-        });
+      message.channel.send({ embeds: [embed] });
 
-      } catch (err) {
+    } catch (err) {
 
-        msg.edit({
-          content: "",
-          embeds: [
-            {
-              title: "📊 SkyForge Network LIVE",
-              color: 0xff0000,
-              fields: [
-                {
-                  name: "📡 Durum",
-                  value: "🔴 Bakımda / Kapalı",
-                  inline: true
-                },
-                {
-                  name: "🌐 IP",
-                  value: ip,
-                  inline: true
-                }
-              ]
-            }
-          ]
-        });
+      console.log("BEDROCK ERROR:", err);
 
-      }
+      message.channel.send("⚠️ Sunucu kapalı veya Bedrock query kapalı!");
 
-    }, 10000); // ⬅ 10 saniye
-
+    }
   }
 };
