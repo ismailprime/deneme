@@ -3,16 +3,15 @@ module.exports = {
 
   async execute(message, client, args) {
     const prize = args.join(" ");
-    if (!prize) return message.reply("Ödül yaz!");
 
-    const msg = await message.channel.send(`⚡ DROP! İlk tıklayan kazanır: **${prize}**`);
+    const msg = await message.channel.send(`⚡ DROP BAŞLADI: **${prize}** (ilk tıklayan kazanır)`);
 
     const filter = i => !i.user.bot;
 
     const collector = msg.channel.createMessageComponentCollector({ filter, max: 1 });
 
     collector.on("collect", i => {
-      msg.edit(`🏆 ${i.user} ödülü kazandı! Ticket açarak alabilirsin.`);
+      msg.edit(`🏆 ${i.user} kazandı! Ödül: ${prize} (ticket aç)`);
     });
   }
 };
