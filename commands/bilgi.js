@@ -3,60 +3,54 @@ const { status } = require("minecraft-server-util");
 module.exports = {
   name: "bilgi",
 
-  async execute(message, client) {
+  async execute(message) {
 
     const ip = "mc.skyforgenw.com.tr";
-    const port = 25565;
 
     try {
 
-      const data = await status(ip, port);
+      const data = await status(ip);
 
-      const embed = {
-        title: "📊 SkyForge Network",
-        color: 0x00ff99,
-        fields: [
+      const online = data?.players?.online ?? 0;
+      const max = data?.players?.max ?? "?";
+      const ping = data?.latency ?? "?"
+
+      return message.channel.send({
+        embeds: [
           {
-            name: "👥 Oyuncular",
-            value: `${data.players.online} / ${data.players.max}`,
-            inline: true
-          },
-          {
-            name: "🏓 Ping",
-            value: `${data.latency} ms`,
-            inline: true
-          },
-          {
-            name: "🌐 IP",
-            value: `${ip}:${port}`,
-            inline: false
-          },
-          {
-            name: "📡 Durum",
-            value: "🟢 Online",
-            inline: true
+            title: "📊 Sunucu Durumu",
+            color: 0x00ff99,
+            fields: [
+              {
+                name: "👥 Oyuncular",
+                value: `${online} / ${max}`,
+                inline: true
+              },
+              {
+                name: "🏓 Ping",
+                value: `${ping} ms`,
+                inline: true
+              },
+              {
+                name: "🌐 IP",
+                value: ip,
+                inline: false
+              }
+            ]
           }
         ]
-      };
-
-      message.channel.send({ embeds: [embed] });
+      });
 
     } catch (err) {
 
       console.log("MC ERROR:", err);
 
-      message.channel.send({
+      return message.channel.send({
         embeds: [
           {
-            title: "📊 SkyForge Network",
+            title: "📊 Sunucu Durumu",
             color: 0xff0000,
-            description: "🔴 Sunucuya ulaşılamıyor (kapalı veya bakımda)",
-            fields: [
-              {
-                name: "🌐 IP",
-                value: `${ip}:${port}`
-              }
-            ]
+            description: "🔴 Sunucuya ulaşılamıyor (offline / plugin / firewall)"
           }
         ]
       });
