@@ -24,7 +24,7 @@ const client = new Client({
 const invites = new Map();
 const userInvites = new Map();
 
-// 📊 READY
+// 🚀 READY
 client.once("ready", async () => {
   console.log(`${client.user.tag} aktif`);
 
@@ -40,7 +40,7 @@ client.on("guildMemberAdd", (member) => {
   if (ch) ch.send(`👋 Hoşgeldin <@${member.id}>`);
 });
 
-// 📊 INVITE TRACK REAL
+// 📨 INVITE TRACK
 client.on("inviteCreate", async (invite) => {
   const g = invites.get(invite.guild.id) || new Map();
   g.set(invite.code, invite);
@@ -57,8 +57,8 @@ client.on("guildMemberAdd", async (member) => {
   );
 
   if (used?.inviter) {
-    const count = userInvites.get(used.inviter.id) || 0;
-    userInvites.set(used.inviter.id, count + 1);
+    const c = userInvites.get(used.inviter.id) || 0;
+    userInvites.set(used.inviter.id, c + 1);
   }
 
   invites.set(member.guild.id, fresh);
@@ -72,7 +72,7 @@ client.on("messageCreate", async (message) => {
   const msg = message.content.toLowerCase().trim();
 
   // SELAM
-  if (["sa","selam","selamün aleyküm","selamun aleyküm"].includes(msg)) {
+  if (["sa", "selam", "selamün aleyküm"].includes(msg)) {
     return message.channel.send(`Aleyküm selam <@${message.author.id}> 👋`);
   }
 
@@ -89,26 +89,73 @@ Sürüm: 1.9 - 1.21.x
     const c = userInvites.get(message.author.id) || 0;
     return message.channel.send(`📨 Davet: **${c}**`);
   }
-});
 
-// 📊 LOG SYSTEM
-function sendLog(guild, text) {
-  const ch = guild.channels.cache.get(LOG_CHANNEL_ID);
-  if (!ch) return;
+  // TICKET PANEL
+  if (message.content === "!ticket") {
 
-  ch.send(`📊 LOG\n${text}`).catch(() => {});
-}
+    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) return;
 
-client.on("messageDelete", (m) => {
-  if (!m.guild) return;
-  sendLog(m.guild, `🗑️ Silindi: ${m.content || "boş"}`);
-});
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
-client.on("messageUpdate", (o, n) => {
-  if (!o.guild) return;
-  if (o.content === n.content) return;
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("ticket_open")
+        .setLabel("🎟 Ticket Aç")
+        .setStyle(ButtonStyle.Success)
+    );
 
-  sendLog(o.guild, `✏️ Edit\nÖnce: ${o.content}\nSonra: ${n.content}`);
+    message.channel.send({
+      content: "Ticket sistemi",
+      components: [row]
+    });
+  }
+
+  // ÇEKİLİŞ
+  if (message.content.startsWith("!cekilis")) {
+
+    const args = message.content.split(" ");
+    const time = args[1];
+    const prize = args.slice(2).join(" ");
+
+    let ms = 60000;
+    if (time?.endsWith("m")) ms = parseInt(time) * 60000;
+    if (time?.endsWith("h")) ms = parseInt(time) * 3600000;
+
+    const users = [];
+
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("giveaway_join")
+        .setLabel("Katıl")
+        .setStyle(ButtonStyle.Success)
+    );
+
+    const msg = await message.channel.send({
+      content: `🎉 ${prize}`,
+      components: [row]
+    });
+
+    const collector = msg.createMessageComponentCollector({ time: ms });
+
+    collector.on("collect", (i) => {
+      if (!users.includes(i.user.id)) {
+        users.push(i.user.id);
+        i.reply({ content: "Katıldın", ephemeral: true });
+      }
+    });
+
+    collector.on("end", () => {
+
+      if (users.length === 0)
+        return msg.edit("Katılım yok");
+
+      const winner = users[Math.floor(Math.random() * users.length)];
+
+      msg.edit(`🏆 Kazanan: <@${winner}>`);
+    });
+  }
 });
 
 client.login(TOKEN);
