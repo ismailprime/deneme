@@ -1,11 +1,12 @@
 {
-  "name": "discord-bot",
+  "name": "skyforge-bot",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "discord.js": "^14.15.3"
+    "discord.js": "^14.15.3",
+    "ms": "^2.1.3"
   }
 }
