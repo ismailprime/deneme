@@ -21,7 +21,7 @@ module.exports = {
 
     const rolePing = roles.map(r => `<@&${r}>`).join(" ");
 
-    // OPEN
+    // 🎟 OPEN PANEL
     if (i.customId === "ticket_open") {
 
       const menu = new StringSelectMenuBuilder()
@@ -41,7 +41,7 @@ module.exports = {
       });
     }
 
-    // CREATE
+    // 🎟 CREATE
     if (i.customId === "ticket_category") {
 
       const cat = i.values[0];
@@ -78,30 +78,10 @@ module.exports = {
       return i.reply({ content: "Ticket açıldı", ephemeral: true });
     }
 
-    // CLOSE + DM TRANSCRIPT
+    // ❌ CLOSE
     if (i.customId === "ticket_close") {
-
-      const msgs = await i.channel.messages.fetch({ limit: 50 });
-
-      const transcript = msgs
-        .map(m => `${m.author.tag}: ${m.content}`)
-        .reverse()
-        .join("\n");
-
-      const ownerId = i.channel.name.split("-").pop();
-      const user = await i.guild.members.fetch(ownerId).catch(() => null);
-
-      if (user) {
-        user.send(`🎟 Ticket kapatıldı:\n\n${transcript}`).catch(() => {});
-      }
-
-      i.reply("Kapatılıyor...");
-      setTimeout(() => i.channel.delete(), 2000);
-    }
-
-    // GIVEAWAY BUTTON
-    if (i.customId === "giveaway_join") {
-      return i.reply({ content: "Katıldın", ephemeral: true });
+      await i.reply("Kapatılıyor...");
+      setTimeout(() => i.channel.delete().catch(() => {}), 2000);
     }
   }
 };
