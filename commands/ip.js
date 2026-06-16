@@ -2,14 +2,16 @@ module.exports = {
   name: "ip",
 
   execute(message) {
-    message.reply(`
+    message.reply({
+      content: `
 **Java**
 Sürüm: 1.9 - 1.21.x
-Bağlantı Adresi: mc.skyforgenw.com.tr
+IP: mc.skyforgenw.com.tr
 
 **Bedrock**
 Sürüm: Yakında
-Bağlantı Adresi: mc.skyforgenw.com.tr
-`);
+IP: mc.skyforgenw.com.tr
+`
+    });
   }
 };
