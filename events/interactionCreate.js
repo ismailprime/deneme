@@ -1,37 +1,65 @@
 const { ChannelType, PermissionsBitField } = require("discord.js");
-const config = require("../config/config");
 
 module.exports = {
   name: "interactionCreate",
 
   async execute(interaction) {
-    if (!interaction.isButton()) return;
+    try {
 
-    if (interaction.customId === "ticket_open") {
-      const channel = await interaction.guild.channels.create({
-        name: `ticket-${interaction.user.username}`,
-        type: ChannelType.GuildText,
-        permissionOverwrites: [
-          {
-            id: interaction.guild.id,
-            deny: [PermissionsBitField.Flags.ViewChannel]
-          },
-          {
-            id: interaction.user.id,
-            allow: [PermissionsBitField.Flags.ViewChannel]
-          }
-        ]
-      });
+      if (!interaction.isButton()) return;
 
-      const roles = config.supportRoles.map(r => `<@&${r}>`).join(" ");
+      // 🎟 TICKET AÇ
+      if (interaction.customId === "ticket_open") {
 
-      channel.send(`🎟 Ticket açıldı\n${roles}\n<@${interaction.user.id}>`);
+        // 🔒 1 KİŞİ 1 TICKET KONTROL
+        const existing = interaction.guild.channels.cache.find(
+          c => c.name === `ticket-${interaction.user.username.toLowerCase()}`
+        );
 
-      return interaction.reply({ content: "Ticket açıldı!", ephemeral: true });
-    }
+        if (existing) {
+          return interaction.reply({
+            content: "❌ Zaten açık bir ticketin var!",
+            ephemeral: true
+          });
+        }
 
-    if (interaction.customId === "ticket_close") {
-      interaction.channel.delete();
+        // 📁 KANAL OLUŞTUR
+        const channel = await interaction.guild.channels.create({
+          name: `ticket-${interaction.user.username.toLowerCase()}`,
+          type: ChannelType.GuildText,
+          permissionOverwrites: [
+            {
+              id: interaction.guild.id,
+              deny: [PermissionsBitField.Flags.ViewChannel]
+            },
+            {
+              id: interaction.user.id,
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages,
+                PermissionsBitField.Flags.ReadMessageHistory
+              ]
+            }
+          ]
+        });
+
+        // 💬 MESAJ
+        await channel.send(`🎟 Ticket açıldı: <@${interaction.user.id}>\nYetkililer en kısa sürede ilgilenecek.`);
+
+        return interaction.reply({
+          content: `✅ Ticket açıldı: ${channel}`,
+          ephemeral: true
+        });
+      }
+
+      // ❌ TICKET KAPAT
+      if (interaction.customId === "ticket_close") {
+        await interaction.reply({ content: "🔒 Ticket kapatılıyor..." });
+        setTimeout(() => interaction.channel.delete(), 1500);
+      }
+
+    } catch (err) {
+      console.log("TICKET HATA:", err);
     }
   }
 };
