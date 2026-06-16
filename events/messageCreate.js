@@ -8,12 +8,10 @@ module.exports = {
 
     const msg = message.content.toLowerCase();
 
-    // SELAM SİSTEMİ PRO
     if (["sa", "selam", "selamün aleyküm"].includes(msg)) {
-      return message.reply("Aleyküm selam 👋 Hoşgeldin, biz de seni bekliyorduk ❤️");
+      return message.reply("Aleyküm selam ❤️");
     }
 
-    // KOMUT
     if (!message.content.startsWith(config.prefix)) return;
 
     const args = message.content.slice(config.prefix.length).trim().split(/ +/);
