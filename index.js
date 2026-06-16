@@ -49,18 +49,7 @@ client.on("messageCreate", async (message) => {
 
   const msg = message.content.toLowerCase();
 
-  // SA
-  if (["sa", "selam"].includes(msg)) {
-    return message.reply("Aleyküm selam 👋");
-  }
-
-  // IP
-  if (message.content === "!ip") {
-    return message.channel.send("mc.skyforgenw.com.tr");
-  }
-
-  // TICKET PANEL
-  if (message.content === "!ticket") {
+  if (msg === "!ticket") {
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -75,59 +64,8 @@ client.on("messageCreate", async (message) => {
     });
   }
 
-  // ÇEKİLİŞ
-  if (message.content.startsWith("!cekilis")) {
-
-    const args = message.content.split(" ");
-    const time = args[1];
-    const prize = args.slice(2).join(" ");
-
-    if (!time || !prize) return;
-
-    let ms = 60000;
-    if (time.endsWith("m")) ms = parseInt(time) * 60000;
-    if (time.endsWith("h")) ms = parseInt(time) * 3600000;
-
-    const users = [];
-
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("giveaway_join")
-        .setLabel("🎉 Katıl")
-        .setStyle(ButtonStyle.Success)
-    );
-
-    const msgGiveaway = await message.channel.send({
-      content: `🎉 ÇEKİLİŞ\n🎁 ${prize}\n⏰ ${time}`,
-      components: [row]
-    });
-
-    const collector = msgGiveaway.createMessageComponentCollector({ time: ms });
-
-    collector.on("collect", (i) => {
-      if (!users.includes(i.user.id)) {
-        users.push(i.user.id);
-        i.reply({ content: "Katıldın 🎉", ephemeral: true });
-      }
-    });
-
-    collector.on("end", () => {
-
-      if (users.length === 0) {
-        return msgGiveaway.edit("❌ Katılım yok");
-      }
-
-      const winner = users[Math.floor(Math.random() * users.length)];
-
-      msgGiveaway.edit(
-`🎉 ÇEKİLİŞ BİTTİ
-🎁 ${prize}
-
-🏆 Kazanan: <@${winner}>
-
-tebrikler çekilişi kazandınız <@${winner}> ticket açarak ödülünüzü talep ediniz`
-      );
-    });
+  if (msg === "!ip") {
+    return message.channel.send("mc.skyforgenw.com.tr");
   }
 });
 
@@ -138,25 +76,18 @@ client.on("guildMemberAdd", async (member) => {
   if (!ch) return;
 
   const embed = new EmbedBuilder()
-    .setTitle("👋 Hoşgeldin!")
-    .setDescription(`<@${member.id}> sunucuya katıldı!`)
+    .setTitle("👋 Hoşgeldin")
+    .setDescription(`<@${member.id}> sunucuya katıldı`)
     .setColor("Green");
 
   ch.send({ embeds: [embed] });
-});
-
-// ================= LOG =================
-client.on("messageDelete", async (m) => {
-  if (!m.guild) return;
-
-  const ch = m.guild.channels.cache.get(LOG_CHANNEL_ID);
-  if (ch) ch.send(`🗑️ Silindi: ${m.content || "boş"}`);
 });
 
 // ================= INTERACTION =================
 client.on("interactionCreate", async (i) => {
 
   if (!i.isButton() && !i.isStringSelectMenu()) return;
+  if (!i.guild) return;
 
   // ================= TICKET OPEN =================
   if (i.customId === "ticket_open") {
@@ -185,8 +116,18 @@ client.on("interactionCreate", async (i) => {
       name: `ticket-${i.values[0]}-${i.user.username}`,
       type: ChannelType.GuildText,
       permissionOverwrites: [
-        { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-        { id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+        {
+          id: i.guild.id,
+          deny: [PermissionsBitField.Flags.ViewChannel]
+        },
+        {
+          id: i.user.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory
+          ]
+        }
       ]
     });
 
@@ -225,7 +166,7 @@ client.on("interactionCreate", async (i) => {
   // ================= TICKET CLOSE =================
   if (i.customId === "ticket_close") {
 
-    await i.reply("📦 Ticket kapatılıyor...");
+    await i.reply({ content: "📦 Ticket kapatılıyor..." });
 
     const channel = i.channel;
 
@@ -243,7 +184,10 @@ client.on("interactionCreate", async (i) => {
 
     if (logChannel) {
       logChannel.send({
-        content: `📄 Ticket kapatıldı\n📌 ${channel.name}\n🔒 ${i.user.tag}`,
+        content:
+`📄 Ticket kapatıldı
+📌 ${channel.name}
+🔒 ${i.user.tag}`,
         files: [filePath]
       });
     }
@@ -255,10 +199,12 @@ client.on("interactionCreate", async (i) => {
 
     try {
       const owner = await i.client.users.fetch(OWNER_ID);
-      owner.send(`🛑 Ticket kapandı: ${channel.name}`).catch(() => {});
+      owner.send(`🛑 Ticket: ${channel.name}`).catch(() => {});
     } catch {}
 
-    setTimeout(() => channel.delete().catch(() => {}), 2000);
+    setTimeout(() => {
+      channel.delete().catch(() => {});
+    }, 2000);
   }
 
   // ================= GIVEAWAY =================
