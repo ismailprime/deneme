@@ -8,7 +8,7 @@ module.exports = {
     const prize = args.join(" ");
     if (!prize) return message.reply("Ödül yazmalısın!");
 
-    let claimed = false;
+    let winner = null;
 
     const button = new ButtonBuilder()
       .setCustomId("drop_claim")
@@ -18,23 +18,23 @@ module.exports = {
     const row = new ActionRowBuilder().addComponents(button);
 
     const msg = await message.channel.send({
-      content: `⚡ DROP BAŞLADI: **${prize}**`,
+      content: `⚡ DROP: **${prize}**`,
       components: [row]
     });
 
     const collector = msg.createMessageComponentCollector({
-      time: 30000 // 30 saniye
+      time: 30000
     });
 
     collector.on("collect", async (i) => {
 
-      if (claimed) {
-        return i.reply({ content: "Zaten biri kazandı ❌", ephemeral: true });
+      if (winner) {
+        return i.reply({ content: "❌ Çok geç, biri kazandı!", ephemeral: true });
       }
 
-      claimed = true;
+      winner = i.user.id;
 
-      await i.reply(`🏆 <@${i.user.id}> dropu kaptın! Ödül: **${prize}**\nLütfen ticket aç.`);
+      await i.reply(`🏆 <@${i.user.id}> dropu kazandı!\n🎁 Ödül: **${prize}**\nTicket aç!`);
 
       msg.edit({
         content: `🏆 Kazanan: <@${i.user.id}>`,
@@ -45,12 +45,14 @@ module.exports = {
     });
 
     collector.on("end", () => {
-      if (!claimed) {
+
+      if (!winner) {
         msg.edit({
-          content: `❌ Drop bitti, kimse kazanamadı.`,
+          content: "❌ Drop bitti, kimse kazanamadı.",
           components: []
         });
       }
+
     });
   }
 };
