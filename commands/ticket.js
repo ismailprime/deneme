@@ -7,13 +7,13 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setTitle("🎟 Destek Sistemi")
-      .setDescription("Ticket açmak için butona bas")
+      .setDescription("Ticket açmak için aşağıdaki butona bas")
       .setColor("Blue");
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("ticket_open")
-        .setLabel("Ticket Aç")
+        .setLabel("🎫 Ticket Aç")
         .setStyle(ButtonStyle.Primary)
     );
 
