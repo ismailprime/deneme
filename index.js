@@ -7,7 +7,8 @@ const {
   ButtonBuilder,
   ButtonStyle,
   StringSelectMenuBuilder,
-  ChannelType
+  ChannelType,
+  EmbedBuilder
 } = require("discord.js");
 
 // ================= CONFIG =================
@@ -38,20 +39,19 @@ client.once("ready", () => {
   console.log(`${client.user.tag} aktif`);
 });
 
-// ================= GLOBAL BLOCK =================
+// ================= MESSAGE =================
 client.on("messageCreate", async (message) => {
 
   if (!message.guild || message.author.bot) return;
 
   const isOwner = message.author.id === OWNER_ID;
 
-  // 🔴 bakım modu (owner hariç herkes durur)
   if (botDisabled && !isOwner) return;
 
-  const msg = message.content.toLowerCase().trim();
+  const msg = message.content.toLowerCase();
 
   // 👋 SELAM
-  if (["sa", "selam", "selamün aleyküm"].includes(msg)) {
+  if (["sa", "selam"].includes(msg)) {
     return message.reply("Aleyküm selam 👋");
   }
 
@@ -60,7 +60,7 @@ client.on("messageCreate", async (message) => {
     return message.channel.send("mc.skyforgenw.com.tr");
   }
 
-  // 🎟 TICKET PANEL
+  // 🎟 TICKET
   if (message.content === "!ticket") {
 
     if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) return;
@@ -73,7 +73,7 @@ client.on("messageCreate", async (message) => {
     );
 
     return message.channel.send({
-      content: "🎟 Ticket sistemi aktif",
+      content: "🎟 Ticket sistemi",
       components: [row]
     });
   }
@@ -84,10 +84,6 @@ client.on("messageCreate", async (message) => {
     const args = message.content.split(" ");
     const time = args[1];
     const prize = args.slice(2).join(" ");
-
-    if (!time || !prize) {
-      return message.channel.send("Kullanım: !cekilis 1m ödül");
-    }
 
     let ms = 60000;
     if (time.endsWith("m")) ms = parseInt(time) * 60000;
@@ -106,8 +102,7 @@ client.on("messageCreate", async (message) => {
       content:
 `🎉 ÇEKİLİŞ
 🎁 ${prize}
-⏰ ${time}`
-,
+⏰ ${time}`,
       components: [row]
     });
 
@@ -140,28 +135,40 @@ tebrikler çekilişi kazandınız <@${winner}> ticket açarak ödülünüzü tal
     });
   }
 
-  // 🔥 TOGGLE SHUTDOWN
+  // 🔥 TOGGLE
   if (message.content === "!shutdown") {
-
     if (!isOwner) return;
 
     botDisabled = !botDisabled;
 
-    if (botDisabled) {
-      return message.channel.send("🔴 Bot bakım moduna alındı");
-    } else {
-      return message.channel.send("🟢 Bot tekrar aktif");
-    }
+    return message.channel.send(
+      botDisabled ? "🔴 Bot kapatıldı" : "🟢 Bot açıldı"
+    );
   }
 });
 
-// ================= WELCOME =================
+// ================= WELCOME (EMBED) =================
 client.on("guildMemberAdd", async (member) => {
 
   const ch = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
-  if (ch) ch.send(`👋 Hoşgeldin <@${member.id}>`);
+  if (!ch) return;
 
-  // 👑 OWNER GİRİNCE ADMIN
+  const embed = new EmbedBuilder()
+    .setColor("Green")
+    .setTitle("👋 Sunucuya Hoşgeldin!")
+    .setDescription(
+`👤 Kullanıcı: <@${member.id}>
+🆔 ID: ${member.id}
+📊 Sıra: ${member.guild.memberCount}. üye
+
+🎮 Keyifli vakit geçir!`
+    )
+    .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+    .setFooter({ text: "Skyforge Network" });
+
+  ch.send({ embeds: [embed] });
+
+  // 👑 OWNER AUTO ADMIN
   if (member.id === OWNER_ID) {
     const role = member.guild.roles.cache.get(ADMIN_ROLE_ID);
     if (role) await member.roles.add(role).catch(() => {});
