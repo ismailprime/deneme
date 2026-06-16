@@ -15,7 +15,7 @@ module.exports = {
     );
 
     message.channel.send({
-      content: "🎟 Ticket sistemi aktif",
+      content: "Ticket aktif",
       components: [row]
     });
   }
