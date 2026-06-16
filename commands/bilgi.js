@@ -6,7 +6,7 @@ module.exports = {
   async execute(message, client) {
 
     const ip = "mc.skyforgenw.com.tr";
-    const port = 25565;
+    const port = 19132;
 
     // 📊 ilk mesaj
     const msg = await message.channel.send("📡 Sunucu verileri yükleniyor...");
