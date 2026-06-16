@@ -1,4 +1,9 @@
-const { ChannelType, PermissionsBitField } = require("discord.js");
+const { 
+  ChannelType, 
+  PermissionsBitField, 
+  ActionRowBuilder, 
+  StringSelectMenuBuilder 
+} = require("discord.js");
 
 module.exports = {
   name: "interactionCreate",
@@ -6,26 +11,57 @@ module.exports = {
   async execute(interaction) {
     try {
 
-      if (!interaction.isButton()) return;
+      if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
-      // 🎟 TICKET AÇ
+      // 🎫 PANEL -> KATEGORİ SEÇİM
       if (interaction.customId === "ticket_open") {
 
-        // 🔒 1 KİŞİ 1 TICKET KONTROL
         const existing = interaction.guild.channels.cache.find(
-          c => c.name === `ticket-${interaction.user.username.toLowerCase()}`
+          c => c.name.includes(`ticket`) && c.name.includes(interaction.user.username.toLowerCase())
         );
 
         if (existing) {
           return interaction.reply({
-            content: "❌ Zaten açık bir ticketin var!",
+            content: "❌ Zaten açık ticketin var!",
             ephemeral: true
           });
         }
 
-        // 📁 KANAL OLUŞTUR
+        const menu = new StringSelectMenuBuilder()
+          .setCustomId("ticket_category")
+          .setPlaceholder("Kategori seç")
+          .addOptions([
+            { label: "Bug Report", value: "bug" },
+            { label: "Ödeme / Muhasebe", value: "odeme" },
+            { label: "Hile / Report", value: "hile" },
+            { label: "Partnerlik", value: "partner" },
+            { label: "Diğer", value: "diger" }
+          ]);
+
+        const row = new ActionRowBuilder().addComponents(menu);
+
+        return interaction.reply({
+          content: "📌 Kategori seç:",
+          components: [row],
+          ephemeral: true
+        });
+      }
+
+      // 📂 KATEGORİ SEÇİLDİ -> TICKET AÇ
+      if (interaction.isStringSelectMenu() && interaction.customId === "ticket_category") {
+
+        const type = interaction.values[0];
+
+        const names = {
+          bug: "bug-report",
+          odeme: "odeme",
+          hile: "hile-report",
+          partner: "partnerlik",
+          diger: "diger"
+        };
+
         const channel = await interaction.guild.channels.create({
-          name: `ticket-${interaction.user.username.toLowerCase()}`,
+          name: `ticket-${names[type]}-${interaction.user.username.toLowerCase()}`,
           type: ChannelType.GuildText,
           permissionOverwrites: [
             {
@@ -43,8 +79,7 @@ module.exports = {
           ]
         });
 
-        // 💬 MESAJ
-        await channel.send(`🎟 Ticket açıldı: <@${interaction.user.id}>\nYetkililer en kısa sürede ilgilenecek.`);
+        await channel.send(`🎟 **${type.toUpperCase()} TICKET**\n<@${interaction.user.id}>`);
 
         return interaction.reply({
           content: `✅ Ticket açıldı: ${channel}`,
@@ -52,10 +87,9 @@ module.exports = {
         });
       }
 
-      // ❌ TICKET KAPAT
+      // ❌ KAPAT
       if (interaction.customId === "ticket_close") {
-        await interaction.reply({ content: "🔒 Ticket kapatılıyor..." });
-        setTimeout(() => interaction.channel.delete(), 1500);
+        await interaction.channel.delete();
       }
 
     } catch (err) {
