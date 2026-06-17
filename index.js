@@ -10,9 +10,6 @@ StringSelectMenuBuilder
 EmbedBuilder
 } = require("discord.js");
 
-const SUGGEST_CHANNEL_ID = "1516546289515368608";
-const suggestions = {};
-
 // ================= CLIENT =================
 
 const client = new Client({
@@ -36,6 +33,8 @@ const MEMBER_ROLE = process.env.MEMBER_ROLE;
 
 const OWNER_ID = "1003708560728920165";
 const ADMIN_ROLE_ID = "1506368461964705924";
+const SUGGESTION_CHANNEL = "1516546289515368608";
+const suggestionVotes = {};
 
 // ================= DATA =================
 
