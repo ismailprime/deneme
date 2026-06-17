@@ -151,7 +151,7 @@ ${text}
       components: [row]
     });
 
-  suggestions[suggestionMsg.id] = {
+  suggestionsVotes[suggestionMsg.id] = {
   yes: [],
   no: []
 };
@@ -372,14 +372,12 @@ if (
   const data =
   suggestionVotes[interaction.message.id];
 
-  if (!data) {
-  return interaction.reply({
+   interaction.reply({
     content: "❌ Bu öneri bulunamadı.",
     ephemeral: true
   });
   }
   
-  if (!data) return;
 
   if (
     data.yes.includes(interaction.user.id) ||
