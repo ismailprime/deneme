@@ -6,7 +6,7 @@ PermissionsBitField,
 ActionRowBuilder,
 ButtonBuilder,
 ButtonStyle,
-StringSelectMenuBuilder
+StringSelectMenuBuilder,
 EmbedBuilder
 } = require("discord.js");
 
@@ -34,7 +34,7 @@ const MEMBER_ROLE = process.env.MEMBER_ROLE;
 const OWNER_ID = "1003708560728920165";
 const ADMIN_ROLE_ID = "1506368461964705924";
 const SUGGESTION_CHANNEL = "1516546289515368608";
-const suggestionVotes = {};
+const suggestions = suggestionVotes;
 
 // ================= DATA =================
 
@@ -47,7 +47,7 @@ const userInvites = new Map();
 
 client.once("ready", async () => {
 
-console.log(${client.user.tag} aktif!);
+console.log(`${client.user.tag} aktif!`);
 
 client.guilds.cache.forEach(async (guild) => {
 
@@ -370,7 +370,7 @@ if (
 ) {
 
   const data =
-    suggestions[interaction.message.id];
+  suggestionVotes[interaction.message.id];
 
   if (!data) return;
 
