@@ -34,7 +34,7 @@ const MEMBER_ROLE = process.env.MEMBER_ROLE;
 const OWNER_ID = "1003708560728920165";
 const ADMIN_ROLE_ID = "1506368461964705924";
 const SUGGESTION_CHANNEL = "1516546289515368608";
-const suggestions = suggestionVotes;
+const suggestionVotes = {};
 
 // ================= DATA =================
 
@@ -107,9 +107,9 @@ if (message.content.startsWith("!öneri ")) {
   }
 
   const channel =
-    message.guild.channels.cache.get(
-      SUGGEST_CHANNEL_ID
-    );
+  message.guild.channels.cache.get(
+    SUGGESTION_CHANNEL
+  );
 
   if (!channel) {
     return message.reply(
