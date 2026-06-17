@@ -7,7 +7,8 @@ ActionRowBuilder,
 ButtonBuilder,
 ButtonStyle,
 StringSelectMenuBuilder,
-EmbedBuilder
+EmbedBuilder,
+GatewayIntentBits.GuildInvites,
 } = require("discord.js");
 
 // ================= CLIENT =================
