@@ -1,9 +1,4 @@
 const {
-  EmbedBuilder
-} = require("discord.js");
-
-const SUGGEST_CHANNEL_ID = "1516546289515368608";
-const suggestions = {};
 Client,
 GatewayIntentBits,
 Partials,
@@ -12,7 +7,11 @@ ActionRowBuilder,
 ButtonBuilder,
 ButtonStyle,
 StringSelectMenuBuilder
+EmbedBuilder
 } = require("discord.js");
+
+const SUGGEST_CHANNEL_ID = "1516546289515368608";
+const suggestions = {};
 
 // ================= CLIENT =================
 
