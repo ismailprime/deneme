@@ -46,6 +46,7 @@ const userInvites = new Map();
 const inviteData = new Map();
 const inviterCache = new Map();
 const leaveCache = new Map();
+const guildInvitesCache = new Map();
 
 // ================= READY =================
 
@@ -56,8 +57,10 @@ console.log(`${client.user.tag} aktif!`);
 client.guilds.cache.forEach(async (guild) => {
 
 const inv = await guild.invites.fetch().catch(() => {});
-
-invites.set(guild.id, inv);
+guildInvitesCache.set(
+  guild.id,
+  new Map(inv.map(i => [i.code, i.uses]))
+);
 
 await guild.members.fetch().catch(() => {});
 
@@ -71,21 +74,26 @@ client.on("guildMemberAdd", async (member) => {
 
 member.roles.add(MEMBER_ROLE).catch(() => {});
 
-const oldInvites = invites.get(member.guild.id);
+const old = guildInvitesCache.get(member.guild.id);
 const newInvites = await member.guild.invites.fetch().catch(() => null);
 
-if (oldInvites && newInvites) {
+if (!old || !newInvites) return;
 
-    const usedInvite = newInvites.find(inv => {
-        const old = oldInvites.get(inv.code);
-        return old && inv.uses > old.uses;
-    });
+let usedInvite = null;
 
-    invites.set(member.guild.id, newInvites);
+newInvites.forEach(inv => {
+    const oldUses = old.get(inv.code) || 0;
+    if (inv.uses > oldUses) usedInvite = inv;
+});
 
-    if (usedInvite) {
+guildInvitesCache.set(
+    member.guild.id,
+    new Map(newInvites.map(i => [i.code, i.uses]))
+);
 
-        const inviter = usedInvite.inviter.id;
+if (!usedInvite || !usedInvite.inviter) return;
+
+const inviter = usedInvite.inviter.id;
 
         inviterCache.set(member.id, inviter);
 
