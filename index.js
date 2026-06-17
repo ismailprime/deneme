@@ -152,9 +152,9 @@ ${text}
     });
 
   suggestions[suggestionMsg.id] = {
-    yes: [],
-    no: []
-  };
+  yes: [],
+  no: []
+};
 
   return message.reply(
     "✅ Önerin gönderildi."
