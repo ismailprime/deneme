@@ -67,6 +67,7 @@ client.on("guildMemberAdd", async (member) => {
 
 member.roles.add(MEMBER_ROLE).catch(() => {});
 
+// INVITE (EĞER ÇALIŞIYORSA)
 const newInvites = await member.guild.invites.fetch().catch(() => null);
 if (!newInvites) return;
 
@@ -85,60 +86,37 @@ guildInvitesCache.set(
   new Map(newInvites.map(i => [i.code, i.uses]))
 );
 
-if (!usedInvite?.inviter) return;
+if (usedInvite?.inviter) {
+  const inviter = usedInvite.inviter.id;
 
-const inviter = usedInvite.inviter.id;
+  inviterCache.set(member.id, inviter);
 
-        inviterCache.set(member.id, inviter);
+  if (!inviteData.has(inviter)) {
+    inviteData.set(inviter, {
+      joins: 0,
+      left: 0,
+      fake: 0,
+      rejoin: 0
+    });
+  }
 
-        if (!inviteData.has(inviter)) {
-            inviteData.set(inviter, {
-                joins: 0,
-                left: 0,
-                fake: 0,
-                rejoin: 0
-            });
-        }
-
-        const data = inviteData.get(inviter);
-
-        data.joins++;
-
-        if (Date.now() - member.user.createdTimestamp < 7 * 24 * 60 * 60 * 1000) {
-            data.fake++;
-        }
-
-        if (leaveCache.has(member.id)) {
-
-            const leaveTime = leaveCache.get(member.id);
-
-            if (Date.now() - leaveTime < 7 * 24 * 60 * 60 * 1000) {
-                data.rejoin++;
-            }
-
-            leaveCache.delete(member.id);
-        }
-    }
+  inviteData.get(inviter).joins++;
 }
-  
+
+// OWNER ROLE
 if (member.id === OWNER_ID) {
-
-member.roles.add(ADMIN_ROLE_ID).catch(() => {});
-
+  member.roles.add(ADMIN_ROLE_ID).catch(() => {});
 }
 
-const channel =
-member.guild.channels.cache.find(
-c => c.name === "💬│genel-sohbet"
+// WELCOME
+const channel = member.guild.channels.cache.find(
+  c => c.name === "💬│genel-sohbet"
 );
 
 if (channel) {
-
-channel.send(  
-  `👋 Hoşgeldin <@${member.id}>`  
-);
-
+  channel.send(`👋 Hoşgeldin <@${member.id}>`);
 }
+
 });
 
 // ================= MESSAGE =================
