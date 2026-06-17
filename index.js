@@ -565,9 +565,7 @@ if (activeTickets.has(userId)) {
 
 const channel =  
   await interaction.guild.channels.create({  
-    name:
-
-ticket-${category}-${interaction.user.username},
+    name: `ticket-${category}-${interaction.user.username}`,
 
 type: 0,  
 
