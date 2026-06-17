@@ -369,14 +369,14 @@ if (
   interaction.customId === "suggest_no"
 ) {
 
-  const data =
-  suggestionVotes[interaction.message.id];
+  const data = suggestionVotes[interaction.message.id];
 
-   interaction.reply({
+if (!data) {
+  return interaction.reply({
     content: "❌ Bu öneri bulunamadı.",
     ephemeral: true
   });
-  }
+}
   
 
   if (
