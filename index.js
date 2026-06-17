@@ -74,7 +74,7 @@ client.on("guildMemberAdd", async (member) => {
 
 member.roles.add(MEMBER_ROLE).catch(() => {});
 
-// INVITE (EĞER ÇALIŞIYORSA)
+// INVITE
 const newInvites = await member.guild.invites.fetch().catch(() => null);
 if (!newInvites) return;
 
@@ -108,7 +108,7 @@ if (usedInvite?.inviter) {
   }
 
   inviteData.get(inviter).joins++;
-});
+}
 
 // OWNER ROLE
 if (member.id === OWNER_ID) {
