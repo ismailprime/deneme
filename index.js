@@ -41,7 +41,6 @@ const suggestionVotes = {};
 
 const giveaways = {};
 const activeTickets = new Map();
-const invites = new Map();
 const userInvites = new Map();
 const inviteData = new Map();
 const inviterCache = new Map();
@@ -56,12 +55,6 @@ console.log(`${client.user.tag} aktif!`);
 
 client.guilds.cache.forEach(async (guild) => {
 
-const inv = await guild.invites.fetch().catch(() => {});
-guildInvitesCache.set(
-  guild.id,
-  new Map(inv.map(i => [i.code, i.uses]))
-);
-
 await guild.members.fetch().catch(() => {});
 
 });
@@ -74,24 +67,25 @@ client.on("guildMemberAdd", async (member) => {
 
 member.roles.add(MEMBER_ROLE).catch(() => {});
 
-const old = guildInvitesCache.get(member.guild.id);
 const newInvites = await member.guild.invites.fetch().catch(() => null);
+if (!newInvites) return;
 
-if (!old || !newInvites) return;
+const old = guildInvitesCache.get(member.guild.id);
+if (!old) return;
 
 let usedInvite = null;
 
 newInvites.forEach(inv => {
-    const oldUses = old.get(inv.code) || 0;
-    if (inv.uses > oldUses) usedInvite = inv;
+  const oldUses = old.get(inv.code) || 0;
+  if (inv.uses > oldUses) usedInvite = inv;
 });
 
 guildInvitesCache.set(
-    member.guild.id,
-    new Map(newInvites.map(i => [i.code, i.uses]))
+  member.guild.id,
+  new Map(newInvites.map(i => [i.code, i.uses]))
 );
 
-if (!usedInvite || !usedInvite.inviter) return;
+if (!usedInvite?.inviter) return;
 
 const inviter = usedInvite.inviter.id;
 
@@ -145,24 +139,6 @@ channel.send(
 );
 
 }
-});
-
-// ================= INVITE UPDATE =================
-
-client.on("inviteCreate", async (invite) => {
-
-const newInvites = await invite.guild.invites.fetch();
-
-invites.set(invite.guild.id, newInvites);
-
-});
-
-client.on("inviteDelete", async (invite) => {
-
-const newInvites = await invite.guild.invites.fetch();
-
-invites.set(invite.guild.id, newInvites);
-
 });
 
 // ================= MESSAGE =================
