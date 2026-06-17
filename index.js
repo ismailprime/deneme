@@ -42,6 +42,9 @@ const giveaways = {};
 const activeTickets = new Map();
 const invites = new Map();
 const userInvites = new Map();
+const inviteData = new Map();
+const inviterCache = new Map();
+const leaveCache = new Map();
 
 // ================= READY =================
 
@@ -51,12 +54,14 @@ console.log(`${client.user.tag} aktif!`);
 
 client.guilds.cache.forEach(async (guild) => {
 
-const inv =  
-  await guild.invites.fetch().catch(() => {});  
+const inv = await guild.invites.fetch().catch(() => {});
 
 invites.set(guild.id, inv);
 
+await guild.members.fetch().catch(() => {});
+
 });
+
 });
 
 // ================= MEMBER JOIN =================
@@ -65,6 +70,54 @@ client.on("guildMemberAdd", async (member) => {
 
 member.roles.add(MEMBER_ROLE).catch(() => {});
 
+const oldInvites = invites.get(member.guild.id);
+const newInvites = await member.guild.invites.fetch().catch(() => null);
+
+if (oldInvites && newInvites) {
+
+    const usedInvite = newInvites.find(inv => {
+        const old = oldInvites.get(inv.code);
+        return old && inv.uses > old.uses;
+    });
+
+    invites.set(member.guild.id, newInvites);
+
+    if (usedInvite) {
+
+        const inviter = usedInvite.inviter.id;
+
+        inviterCache.set(member.id, inviter);
+
+        if (!inviteData.has(inviter)) {
+            inviteData.set(inviter, {
+                joins: 0,
+                left: 0,
+                fake: 0,
+                rejoin: 0
+            });
+        }
+
+        const data = inviteData.get(inviter);
+
+        data.joins++;
+
+        if (Date.now() - member.user.createdTimestamp < 7 * 24 * 60 * 60 * 1000) {
+            data.fake++;
+        }
+
+        if (leaveCache.has(member.id)) {
+
+            const leaveTime = leaveCache.get(member.id);
+
+            if (Date.now() - leaveTime < 7 * 24 * 60 * 60 * 1000) {
+                data.rejoin++;
+            }
+
+            leaveCache.delete(member.id);
+        }
+    }
+}
+  
 if (member.id === OWNER_ID) {
 
 member.roles.add(ADMIN_ROLE_ID).catch(() => {});
@@ -83,6 +136,24 @@ channel.send(
 );
 
 }
+});
+
+// ================= INVITE UPDATE =================
+
+client.on("inviteCreate", async (invite) => {
+
+const newInvites = await invite.guild.invites.fetch();
+
+invites.set(invite.guild.id, newInvites);
+
+});
+
+client.on("inviteDelete", async (invite) => {
+
+const newInvites = await invite.guild.invites.fetch();
+
+invites.set(invite.guild.id, newInvites);
+
 });
 
 // ================= MESSAGE =================
@@ -196,16 +267,47 @@ mc.skyforgenw.com.tr`
 );
 }
 
-// ================= INVITE =================
+  // ================= INVITE =================
 
-if (message.content === "-i") {
+if (
+    message.content.startsWith("-i") ||
+    message.content.startsWith("!invites")
+) {
 
-const count =  
-  userInvites.get(message.author.id) || 0;  
+    const user =
+        message.mentions.users.first() ||
+        message.author;
 
-return message.channel.send(  
-  `📨 Davet sayın: **${count}**`  
-);
+    const stats = inviteData.get(user.id) || {
+        joins: 0,
+        left: 0,
+        fake: 0,
+        rejoin: 0
+    };
+
+    const embed = new EmbedBuilder()
+        .setColor("#5865F2")
+        .setAuthor({
+            name: `${user.username} Invite İstatistikleri`,
+            iconURL: user.displayAvatarURL()
+        })
+        .setThumbnail(user.displayAvatarURL())
+        .setDescription(
+`📨 **Toplam Davet:** **${stats.joins - stats.left}**
+
+✅ **Joins:** ${stats.joins}
+❌ **Left:** ${stats.left}
+🤖 **Fake:** ${stats.fake}
+🔄 **Rejoins:** ${stats.rejoin}`
+        )
+        .setFooter({
+            text: `İsteyen: ${message.author.username}`
+        })
+        .setTimestamp();
+
+    return message.channel.send({
+        embeds: [embed]
+    });
 
 }
 
@@ -673,6 +775,24 @@ setTimeout(() => {
 }, 2000);
 
 }
+});
+
+// ================= MEMBER LEAVE =================
+
+client.on("guildMemberRemove", async (member) => {
+
+    leaveCache.set(member.id, Date.now());
+
+    const inviter = inviterCache.get(member.id);
+
+    if (!inviter) return;
+
+    const data = inviteData.get(inviter);
+
+    if (!data) return;
+
+    data.left++;
+
 });
 
 // ================= LOGIN =================
