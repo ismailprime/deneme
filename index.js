@@ -8,23 +8,23 @@ ButtonBuilder,
 ButtonStyle,
 StringSelectMenuBuilder,
 EmbedBuilder,
-GatewayIntentBits.GuildInvites,
 } = require("discord.js");
 
 // ================= CLIENT =================
 
 const client = new Client({
-intents: [
-GatewayIntentBits.Guilds,
-GatewayIntentBits.GuildMessages,
-GatewayIntentBits.MessageContent,
-GatewayIntentBits.GuildMembers
-],
-partials: [
-Partials.Message,
-Partials.Channel,
-Partials.GuildMember
-]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildInvites
+  ],
+  partials: [
+    Partials.Message,
+    Partials.Channel,
+    Partials.GuildMember
+  ]
 });
 
 // ================= CONFIG =================
@@ -51,13 +51,20 @@ const guildInvitesCache = new Map();
 
 client.once("ready", async () => {
 
-console.log(`${client.user.tag} aktif!`);
+  console.log(`${client.user.tag} aktif!`);
 
-client.guilds.cache.forEach(async (guild) => {
+  client.guilds.cache.forEach(async (guild) => {
 
-await guild.members.fetch().catch(() => {});
+    const invites = await guild.invites.fetch().catch(() => null);
+    if (!invites) return;
 
-});
+    guildInvitesCache.set(
+      guild.id,
+      new Map(invites.map(i => [i.code, i.uses]))
+    );
+
+    await guild.members.fetch().catch(() => {});
+  });
 
 });
 
@@ -101,7 +108,7 @@ if (usedInvite?.inviter) {
   }
 
   inviteData.get(inviter).joins++;
-}
+});
 
 // OWNER ROLE
 if (member.id === OWNER_ID) {
