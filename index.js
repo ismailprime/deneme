@@ -372,6 +372,13 @@ if (
   const data =
   suggestionVotes[interaction.message.id];
 
+  if (!data) {
+  return interaction.reply({
+    content: "❌ Bu öneri bulunamadı.",
+    ephemeral: true
+  });
+  }
+  
   if (!data) return;
 
   if (
