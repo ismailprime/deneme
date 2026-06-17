@@ -151,7 +151,7 @@ ${text}
       components: [row]
     });
 
-  suggestionsVotes[suggestionMsg.id] = {
+  suggestionVotes[suggestionMsg.id] = {
   yes: [],
   no: []
 };
